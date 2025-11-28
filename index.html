@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>趣味动物消消乐 - 清新莫兰迪</title>
+    <style>
+        /* --- 定义莫兰迪浅绿/蓝色系变量 --- */
+        :root {
+            --morandi-light-green-1: #c8d8c8; /* 浅绿偏灰 */
+            --morandi-light-green-2: #a5b5a5; /* 稍深浅绿 */
+            --morandi-light-blue-1: #c1d3d0; /* 浅蓝偏灰 */
+            --morandi-light-blue-2: #9fb9b6; /* 稍深浅蓝 */
+
+            --text-color-dark: #6a8080; /* 深灰蓝 */
+            --text-color-medium: #8a9a9a; /* 中等灰蓝 */
+            --bg-color-light: #f7fbfb; /* 极浅灰蓝背景 */
+            --card-number-color: #5a7070; /* 数字颜色 */
+        }
+
+        /* --- 1. 基础全局样式 --- */
+        body {
+            font-family: 'KaiTi', '楷体', 'STKaiti', 'Microsoft YaHei', sans-serif; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color-light); /* 清新背景色 */
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: var(--text-color-dark); /* 标题颜色 */
+            margin: 10px 0;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .game-status {
+            font-size: 1.3em;
+            color: var(--text-color-medium); /* 状态文字颜色 */
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        /* --- 2. 游戏板布局 (4x2, 宽卡片) --- */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            
+            width: 95vw;
+            max-width: 800px;
+            height: auto;
+        }
+
+        /* --- 3. 卡片样式 (核心修改：4:3 比例) --- */
+        .card {
+            aspect-ratio: 4 / 3;
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.5, 1.2);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            text-align: center;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        /* --- 卡片封面：莫兰迪浅绿/蓝色渐变 + 数字序号 --- */
+        .card-front {
+            background: linear-gradient(135deg, var(--morandi-light-green-1) 0%, var(--morandi-light-blue-1) 100%);
+            color: var(--card-number-color);
+            font-size: 3em;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* --- 卡片内容：大图布局 --- */
+        .card-back {
+            background-color: #fff;
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px;
+        }
+
+        /* --- 4. 内容具体样式 --- */
+        .animal-emoji {
+            font-size: 4.5em;
+            line-height: 1;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.06));
+        }
+        
+        .text-container {
+            flex-grow: 0;
+            padding-top: 5px;
+            padding-bottom: 2px;
+            width: 100%;
+            border-top: 1px solid #ebf2f2;
+        }
+
+        .hanzi {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--text-color-dark);
+            font-family: 'KaiTi', '楷体', 'STKaiti', serif; 
+            line-height: 1.2;
+        }
+        
+        .pinyin {
+            font-size: 0.8em;
+            color: var(--text-color-medium);
+            font-family: Arial, sans-serif; 
+            margin-top: 2px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 600px) {
+            h1 { font-size: 2em; }
+            .animal-emoji { font-size: 3.5em; }
+            .hanzi { font-size: 1.2em; }
+            .card-front { font-size: 2.5em; }
+            .game-board { gap: 10px; padding: 15px; width: 98vw; }
+        }
+
+        /* --- 5. 匹配动画 --- */
+        .matched {
+            animation: popOut 0.6s forwards;
+        }
+        
+        @keyframes popOut {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* --- 6. 按钮样式：莫兰迪风格 + Emoji --- */
+        button {
+            padding: 10px 30px;
+            font-size: 2.8em;
+            margin-top: 30px;
+            cursor: pointer;
+            font-family: 'Segoe UI Emoji', 'Segoe UI', Arial, sans-serif;
+            
+            /* 莫兰迪浅绿/蓝色渐变背景 */
+            background: linear-gradient(45deg, var(--morandi-light-blue-2) 0%, var(--morandi-light-green-2) 100%);
+            color: #fefefe;
+            border: none;
+            border-radius: 12px;
+            
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            transition: all 0.2s ease-in-out;
+            outline: none;
+        }
+        
+        button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.18);
+            background: linear-gradient(45deg, var(--morandi-light-green-2) 0%, var(--morandi-light-blue-2) 100%);
+        }
+
+        button:active {
+            transform: translateY(0px) scale(0.98);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        /* --- 7. 烟花 Canvas --- */
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <h1>动物消消乐</h1>
+    <div class="game-status" id="gameStatus">剩余卡片：8</div>
+    
+    <div class="game-board" id="gameBoard">
+        </div>
+
+    <button id="resetButton" onclick="initializeGame()" aria-label="再来一轮">👆</button>
+
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        // --- 游戏配置 ---
+        const ROWS = 2; 
+        const COLS = 4; 
+        const gameBoard = document.getElementById('gameBoard');
+        const gameStatus = document.getElementById('gameStatus');
+        const winAudio = new Audio('https://www.soundjay.com/misc/sounds/magic-chime-01.mp3');
+        
+        const animals = [
+            { hanzi: "鸟", pinyin: "niǎo", icon: "🐦" },
+            { hanzi: "鱼", pinyin: "yú", icon: "🐟" },
+            { hanzi: "老虎", pinyin: "lǎo hǔ", icon: "🐯" },
+            { hanzi: "骆驼", pinyin: "luò tuo", icon: "🐫" },
+        ];
+
+        let cards = [];
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        let matchesFound = 0;
+        let totalPairs = animals.length;
+
+        // --- 初始化游戏 ---
+        function initializeGame() {
+            gameBoard.innerHTML = '';
+            cards = [];
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+            matchesFound = 0;
+            totalPairs = animals.length;
+            updateGameStatus();
+
+            const doubledAnimals = [...animals, ...animals]; 
+            shuffle(doubledAnimals);
+
+            doubledAnimals.forEach((animal, index) => {
+                const cardElement = createCardElement(animal, index);
+                cardElement.addEventListener('click', flipCard);
+                gameBoard.appendChild(cardElement);
+                cards.push(cardElement);
+            });
+        }
+        
+        // --- 创建卡片 DOM (为封面添加数字序号) ---
+        function createCardElement(animal, index) {
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('card');
+            cardElement.dataset.name = animal.hanzi;
+            cardElement.dataset.index = index;
+
+            cardElement.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">${index + 1}</div> 
+                    <div class="card-back">
+                        <div class="animal-emoji">${animal.icon}</div>
+                        <div class="text-container">
+                            <div class="hanzi">${animal.hanzi}</div>
+                            <div class="pinyin">${animal.pinyin}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return cardElement;
+        }
+
+        // --- 洗牌算法 ---
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- 翻牌逻辑 (保持不变) ---
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return; 
+
+            this.classList.add('flipped');
+
+            const hanziText = this.querySelector('.hanzi').textContent;
+            speakText(hanziText);
+
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            lockBoard = true;
+
+            checkForMatch();
+        }
+
+        // --- 语音播报 (保持不变) ---
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN'; 
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.name === secondCard.dataset.name;
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+
+            setTimeout(() => {
+                firstCard.classList.add('matched');
+                secondCard.classList.add('matched');
+                resetBoard();
+                matchesFound++;
+                updateGameStatus();
+                
+                if (matchesFound === totalPairs) {
+                    handleVictory();
+                }
+            }, 600);
+        }
+
+        function unflipCards() {
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [firstCard, secondCard, lockBoard] = [null, null, false];
+        }
+
+        function updateGameStatus() {
+            gameStatus.textContent = `剩余卡片：${(ROWS * COLS) - (matchesFound * 2)}`;
+        }
+
+        function handleVictory() {
+            winAudio.play().catch(() => speakText("太棒了，胜利！"));
+            
+            // 烟花连放
+            launchFireworks();
+            setTimeout(launchFireworks, 600);
+            setTimeout(launchFireworks, 1200);
+
+            setTimeout(() => {
+                alert('🎉 恭喜！你完成了所有匹配！');
+            }, 1800);
+        }
+
+        // --- 7. 烟花效果 (恢复为原文件中的清晰、鲜艳版本) ---
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function launchFireworks() {
+            // 使用鲜艳的颜色
+            const colors = ['#ff0000', '#ffd700', '#ff69b4', '#00ff00', '#00ffff'];
+            const x = Math.random() * (canvas.width * 0.6) + (canvas.width * 0.2);
+            const y = Math.random() * (canvas.height * 0.5) + (canvas.height * 0.2);
+            
+            // 粒子数量、速度和生命周期采用原文件的参数
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100 
+                });
+            }
+            if (!isAnimating) {
+                animateFireworks();
+            }
+        }
+
+        let isAnimating = false;
+        function animateFireworks() {
+            isAnimating = true;
+            
+            // 关键修改：完全清除画布，没有拖尾效果，以保证清晰可见性
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // 重力采用原文件的 0.1
+                p.life--;
+                
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); // 粒子大小采用原文件的 3
+                ctx.fill();
+            }
+            
+            particles = particles.filter(p => p.life > 0);
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateFireworks);
+            } else {
+                isAnimating = false;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // 启动
+        initializeGame();
+    </script>
+</body>
+</html>
